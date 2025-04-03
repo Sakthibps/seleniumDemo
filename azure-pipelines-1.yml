@@ -1,0 +1,44 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+ 
+- script: |
+    echo "Cloning repository..."
+    git clone $(Build.Repository.Uri) repo
+    cd repo
+  displayName: 'Clone Git Repository'
+ 
+- script: |
+    echo "Setting up Maven..."
+    mvn clean install
+  workingDirectory: repo
+  displayName: 'Build with Maven'
+ 
+- script: |
+    echo "Running Selenium Tests..."
+    mvn test
+  workingDirectory: repo
+  displayName: 'Execute Selenium Tests'
+ 
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/target/surefire-reports/*.xml'
+    testRunTitle: 'Selenium Test Results'
+  condition: always()
+  displayName: 'Publish Test Results'
+ 
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: 'repo/target'
+    artifactName: 'selenium-tests'
+  displayName: 'Publish Artifacts'
